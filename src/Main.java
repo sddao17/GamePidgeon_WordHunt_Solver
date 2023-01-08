@@ -19,6 +19,9 @@ public class Main {
         long startTime;
         long endTime;
 
+        System.out.println("==============================================================\n" +
+                "                          Word Hunt");
+
         if (!dictionary.exists()) {
             System.out.println("""
                     ==============================================================
