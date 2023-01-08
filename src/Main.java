@@ -197,8 +197,8 @@ public class Main {
 
             for (int j = 0; j < gridXSize; ++j) {
                 result.append(ANSI_GRID).append("| ").append(ANSI_RESET)
-                        .append(ANSI_CHAR_COLOR).append(grid[i][j])
-                        .append(ANSI_RESET).append(ANSI_GRID).append(" ");
+                        .append(ANSI_CHAR_COLOR).append(grid[i][j]).append(ANSI_RESET)
+                        .append(ANSI_GRID).append(" ");
             }
             result.append("|\n+").append("---+".repeat(gridXSize)).append("\n").append(ANSI_RESET);
         }
