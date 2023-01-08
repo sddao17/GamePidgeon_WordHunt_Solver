@@ -7,16 +7,17 @@ import java.util.*;
 
 public class WordHunter {
 
-    private static final int gridYSize = Main.gridDimensions[0];
-    private static final int gridXSize = Main.gridDimensions[1];
-    public static final char[][] grid = new char[gridYSize][gridXSize];
+    private static char[][] grid;
+    private static int gridYSize;
+    private static int gridXSize;
 
-    public static Map<Integer, Set<String>> findWords(String input, File parsedDictionary, File substringSet) {
+    public static Map<Integer, Set<String>> findWords(char[][] grid, File parsedDictionary, File substringSet) {
         Map<Integer, Set<String>> foundWords = new TreeMap<>();
         Set<String> words = readFile(parsedDictionary);
         Set<String> substrings = readFile(substringSet);
-
-        setGrid(input);
+        WordHunter.grid = grid;
+        gridYSize = grid.length;
+        gridXSize = grid[0].length;
 
         for (int i = 0; i < gridYSize; ++i) {
             for (int j = 0; j < gridXSize; ++j) {
@@ -26,23 +27,6 @@ public class WordHunter {
         }
 
         return foundWords;
-    }
-
-    private static void setGrid(String input) {
-        int inputLength = input.length();
-        int currentRow = 0;
-
-        for (int i = 0; i < inputLength; ++i) {
-            int currentColumn = i % gridXSize;
-
-            if (i != 0 && i % gridYSize == 0) {
-                ++currentRow;
-                currentColumn = 0;
-            }
-
-            grid[currentRow][currentColumn] = input.charAt(i);
-            ++currentColumn;
-        }
     }
 
     private static void checkAdjacentTiles(Map<Integer, Set<String>> foundWords, Set<String> words, Set<String> substrings,
@@ -58,7 +42,7 @@ public class WordHunter {
         if (words.contains(currentString)) {
             int currentStringLength = currentString.length();
             if (foundWords.get(currentStringLength) == null) {
-                foundWords.put(currentStringLength, new HashSet<>(){{add(currentString);}});
+                foundWords.put(currentStringLength, new TreeSet<>(){{add(currentString);}});
             } else {
                 foundWords.get(currentString.length()).add(currentString);
             }
