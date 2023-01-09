@@ -157,10 +157,11 @@ public class Main {
             List<String> value = new ArrayList<>(entry.getValue());
 
             for (int i = 0; i < largestListSize; ++i) {
+                int padLength = (i < largestListSize - 1) ? 4 : 0;
                 if (i < value.size()) {
-                    sortedLines[i] = justifiedLeftString(value.get(i), key + 4) + sortedLines[i];
+                    sortedLines[i] = justifiedLeftString(value.get(i), key + padLength) + sortedLines[i];
                 } else {
-                    sortedLines[i] = justifiedLeftString("", key + 4) + sortedLines[i];
+                    sortedLines[i] = justifiedLeftString("", key + padLength) + sortedLines[i];
                 }
             }
         }
@@ -192,7 +193,7 @@ public class Main {
 
         for (int i = 0; i < gridYSize; ++i) {
             if (i == 0) {
-                result.append(ANSI_GRID).append("+").append("---+".repeat(gridXSize)).append("\n");
+                result.append(ANSI_GRID).append("+").append("---+".repeat(gridXSize)).append(ANSI_RESET).append("\n");
             }
 
             for (int j = 0; j < gridXSize; ++j) {
@@ -200,7 +201,8 @@ public class Main {
                         .append(ANSI_CHAR_COLOR).append(grid[i][j]).append(ANSI_RESET)
                         .append(ANSI_GRID).append(" ");
             }
-            result.append("|\n+").append("---+".repeat(gridXSize)).append("\n").append(ANSI_RESET);
+            result.append("|").append(ANSI_RESET).append("\n")
+                    .append(ANSI_GRID).append("+").append("---+".repeat(gridXSize)).append(ANSI_RESET).append("\n");
         }
 
         return result.toString();
