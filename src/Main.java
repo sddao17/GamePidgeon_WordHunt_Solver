@@ -1,19 +1,22 @@
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
 
-    public static final int[] gridDimensions = new int[]{4, 4};
-    public static final char[][] grid = new char[gridDimensions[0]][gridDimensions[1]];
-    public static final File dictionary = new File("dictionary.txt");
-    public static final File parsedDictionary = new File("parsedDictionary.txt");
-    public static final File substringSet = new File("substringSet.txt");
+    public static final int[] GRID_DIMENSIONS = new int[]{4, 4};
+    public static final char[][] GRID = new char[GRID_DIMENSIONS[0]][GRID_DIMENSIONS[1]];
+    public static final File DICTIONARY = new File("dictionary.txt");
+    public static final File PARSED_DICTIONARY = new File("parsed_dictionary.txt");
+    public static final File SUBSTRING_SET = new File("substring_set.txt");
+    public static final int[] pointValues = new int[14];
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_GRID = "\u001B[34m"; // Blue
     private static final String ANSI_CHAR_COLOR = "\u001B[36m"; // Cyan
     private static final String ANSI_WORD_COLOR = "\u001B[36m"; // Cyan
+    private static final String ANSI_TOTAL_POINTS_COLOR = "\u001B[33m"; // Yellow
 
     public static void main(String[] args) {
         long startTime;
@@ -22,7 +25,7 @@ public class Main {
         System.out.println("==============================================================\n" +
                 "                          Word Hunt");
 
-        if (!dictionary.exists()) {
+        if (!DICTIONARY.exists()) {
             System.out.println("""
                     ==============================================================
                     
@@ -31,30 +34,30 @@ public class Main {
             System.exit(0);
         }
 
-        if (!parsedDictionary.exists()) {
+        if (!PARSED_DICTIONARY.exists()) {
             System.out.print("""
                     ==============================================================
 
-                    "parsedDictionary.txt" does not exist within the directory.
+                    "parsed_dictionary.txt" does not exist within the directory.
                     Parsing "dictionary.txt" ...\s""");
 
             startTime = System.nanoTime();
-            DictionaryParser.parse(dictionary, parsedDictionary);
+            DictionaryParser.parse(DICTIONARY, PARSED_DICTIONARY);
             endTime = System.nanoTime();
 
             System.out.println("completed in " +
                     ((double) (endTime - startTime) / 1_000_000_000) + "s.\n");
         }
 
-        if (!substringSet.exists()) {
+        if (!SUBSTRING_SET.exists()) {
             System.out.print("""
                     ==============================================================
                     
-                    "substringSet.txt" does not exist within the directory.
+                    "substring_set.txt" does not exist within the directory.
                     Creating set from "dictionary.txt" ...\s""");
 
             startTime = System.nanoTime();
-            SubstringSetter.createMappings(parsedDictionary, substringSet);
+            SubstringSetter.createMappings(PARSED_DICTIONARY, SUBSTRING_SET);
             endTime = System.nanoTime();
 
             System.out.println("completed in " +
@@ -63,12 +66,11 @@ public class Main {
 
         String input = requestUserInput();
         setGrid(input);
-        System.out.println("\n" + getBoardAsString());
 
-        System.out.print("Searching for valid words ... ");
+        System.out.print("\nSearching for valid words ... ");
 
         startTime = System.nanoTime();
-        Map<Integer, Set<String>> words = WordHunter.findWords(grid, parsedDictionary, substringSet);
+        Map<Integer, Set<String>> words = WordHunter.findWords(GRID, PARSED_DICTIONARY, SUBSTRING_SET, pointValues);
         endTime = System.nanoTime();
 
         System.out.println("completed in " +
@@ -83,10 +85,22 @@ public class Main {
         System.out.println("completed in " +
                 ((double) (endTime - startTime) / 1_000_000_000) + "s.\n");
 
+        System.out.println(getBoardAsString());
+
         System.out.println("Found the following words:");
         for (String sortedLine : sortedLines) {
             System.out.println(ANSI_WORD_COLOR + sortedLine + ANSI_RESET);
         }
+
+        int totalPoints = 0;
+        for (int i = 0; i < pointValues.length; ++i) {
+            totalPoints += pointValues[i];
+        }
+
+        System.out.println("\nTotal points: " + ANSI_TOTAL_POINTS_COLOR + totalPoints + ANSI_RESET +
+                "\n= " + Arrays.stream(pointValues)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining(" + ")));
     }
 
     private static String requestUserInput() {
@@ -98,14 +112,14 @@ public class Main {
                 ==============================================================
 
                 Enter the %d letters from left-right, top-bottom (no spaces):
-                 >>\s""", gridDimensions[0] * gridDimensions[1]);
+                 >>\s""", GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1]);
 
         while (!valid) {
             input = in.nextLine().toUpperCase();
 
-            if (!(input.length() % gridDimensions[0] == 0 && input.length() % gridDimensions[1] == 0)) {
+            if (!(input.length() % GRID_DIMENSIONS[0] == 0 && input.length() % GRID_DIMENSIONS[1] == 0)) {
                 System.out.print("String length must be of length " +
-                        (gridDimensions[0] * gridDimensions[1]) + "; please try again.\n >> ");
+                        (GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1]) + "; please try again.\n >> ");
             } else {
                 int inputLength = input.length();
 
@@ -124,9 +138,7 @@ public class Main {
     }
 
     private static String[] sort(Map<Integer, Set<String>> words) {
-
         Map<Integer, Set<String>> sortedMap = new TreeMap<>(words);
-
         return convertMapToList(sortedMap);
     }
 
@@ -157,7 +169,7 @@ public class Main {
             List<String> value = new ArrayList<>(entry.getValue());
 
             for (int i = 0; i < largestListSize; ++i) {
-                int padLength = (i < largestListSize - 1) ? 4 : 0;
+                int padLength = (i <= largestListSize - 1) ? 4 : 0;
                 if (i < value.size()) {
                     sortedLines[i] = justifiedLeftString(value.get(i), key + padLength) + sortedLines[i];
                 } else {
@@ -174,22 +186,22 @@ public class Main {
         int currentRow = 0;
 
         for (int i = 0; i < inputLength; ++i) {
-            int currentColumn = i % gridDimensions[1];
+            int currentColumn = i % GRID_DIMENSIONS[1];
 
-            if (i != 0 && i % gridDimensions[1] == 0) {
+            if (i != 0 && i % GRID_DIMENSIONS[1] == 0) {
                 ++currentRow;
                 currentColumn = 0;
             }
 
-            grid[currentRow][currentColumn] = input.charAt(i);
+            GRID[currentRow][currentColumn] = input.charAt(i);
             ++currentColumn;
         }
     }
 
     private static String getBoardAsString() {
         StringBuilder result = new StringBuilder();
-        int gridYSize = grid.length;
-        int gridXSize = grid[0].length;
+        int gridYSize = GRID.length;
+        int gridXSize = GRID[0].length;
 
         for (int i = 0; i < gridYSize; ++i) {
             if (i == 0) {
@@ -198,7 +210,7 @@ public class Main {
 
             for (int j = 0; j < gridXSize; ++j) {
                 result.append(ANSI_GRID).append("| ").append(ANSI_RESET)
-                        .append(ANSI_CHAR_COLOR).append(grid[i][j]).append(ANSI_RESET)
+                        .append(ANSI_CHAR_COLOR).append(GRID[i][j]).append(ANSI_RESET)
                         .append(ANSI_GRID).append(" ");
             }
             result.append("|").append(ANSI_RESET).append("\n")
