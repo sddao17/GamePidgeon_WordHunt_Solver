@@ -5,18 +5,21 @@ import java.util.stream.Collectors;
 
 public class Main {
 
-    public static final int[] GRID_DIMENSIONS = new int[]{4, 4};
-    public static final char[][] GRID = new char[GRID_DIMENSIONS[0]][GRID_DIMENSIONS[1]];
     public static final File DICTIONARY = new File("dictionary.txt");
     public static final File PARSED_DICTIONARY = new File("parsed_dictionary.txt");
     public static final File SUBSTRING_SET = new File("substring_set.txt");
-    public static final int[] pointValues = new int[14];
 
     private static final String ANSI_RESET = "\u001B[0m";
     private static final String ANSI_GRID = "\u001B[34m"; // Blue
     private static final String ANSI_CHAR_COLOR = "\u001B[36m"; // Cyan
     private static final String ANSI_WORD_COLOR = "\u001B[36m"; // Cyan
     private static final String ANSI_TOTAL_POINTS_COLOR = "\u001B[33m"; // Yellow
+
+    public static final int DIMENSION = 15;
+    public static final int[] GRID_DIMENSIONS = new int[]{DIMENSION, DIMENSION};
+    public static final char[][] grid = new char[GRID_DIMENSIONS[0]][GRID_DIMENSIONS[1]];
+    public static final int[] pointValues = new int[14];
+    public static final int[] numWordsFound = new int[14];
 
     public static void main(String[] args) {
         long startTime;
@@ -70,7 +73,7 @@ public class Main {
         System.out.print("\nSearching for valid words ... ");
 
         startTime = System.nanoTime();
-        Map<Integer, Set<String>> words = WordHunter.findWords(GRID, PARSED_DICTIONARY, SUBSTRING_SET, pointValues);
+        Map<Integer, Set<String>> words = WordHunter.findWords(PARSED_DICTIONARY, SUBSTRING_SET);
         endTime = System.nanoTime();
 
         System.out.println("completed in " +
@@ -92,12 +95,18 @@ public class Main {
             System.out.println(ANSI_WORD_COLOR + sortedLine + ANSI_RESET);
         }
 
+        int totalNumWords = 0;
         int totalPoints = 0;
-        for (int i = 0; i < pointValues.length; ++i) {
+        for (int i = 0; i < numWordsFound.length; ++i) {
+            totalNumWords += numWordsFound[i];
             totalPoints += pointValues[i];
         }
 
-        System.out.println("\nTotal points: " + ANSI_TOTAL_POINTS_COLOR + totalPoints + ANSI_RESET +
+        System.out.println("Total of words found: " + ANSI_TOTAL_POINTS_COLOR + addCommas(totalNumWords) + ANSI_RESET +
+                "\n= " + Arrays.stream(numWordsFound)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining(" + ")));
+        System.out.println("Total points: " + ANSI_TOTAL_POINTS_COLOR + addCommas(totalPoints) + ANSI_RESET +
                 "\n= " + Arrays.stream(pointValues)
                 .mapToObj(String::valueOf)
                 .collect(Collectors.joining(" + ")));
@@ -117,7 +126,7 @@ public class Main {
         while (!valid) {
             input = in.nextLine().toUpperCase();
 
-            if (!(input.length() % GRID_DIMENSIONS[0] == 0 && input.length() % GRID_DIMENSIONS[1] == 0)) {
+            if (input.length() != (GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1])) {
                 System.out.print("String length must be of length " +
                         (GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1]) + "; please try again.\n >> ");
             } else {
@@ -188,20 +197,20 @@ public class Main {
         for (int i = 0; i < inputLength; ++i) {
             int currentColumn = i % GRID_DIMENSIONS[1];
 
-            if (i != 0 && i % GRID_DIMENSIONS[1] == 0) {
+            if (i != 0 && i % GRID_DIMENSIONS[0] == 0) {
                 ++currentRow;
                 currentColumn = 0;
             }
 
-            GRID[currentRow][currentColumn] = input.charAt(i);
+            grid[currentRow][currentColumn] = input.charAt(i);
             ++currentColumn;
         }
     }
 
     private static String getBoardAsString() {
         StringBuilder result = new StringBuilder();
-        int gridYSize = GRID.length;
-        int gridXSize = GRID[0].length;
+        int gridYSize = grid.length;
+        int gridXSize = grid[0].length;
 
         for (int i = 0; i < gridYSize; ++i) {
             if (i == 0) {
@@ -210,7 +219,7 @@ public class Main {
 
             for (int j = 0; j < gridXSize; ++j) {
                 result.append(ANSI_GRID).append("| ").append(ANSI_RESET)
-                        .append(ANSI_CHAR_COLOR).append(GRID[i][j]).append(ANSI_RESET)
+                        .append(ANSI_CHAR_COLOR).append(grid[i][j]).append(ANSI_RESET)
                         .append(ANSI_GRID).append(" ");
             }
             result.append("|").append(ANSI_RESET).append("\n")
@@ -228,5 +237,19 @@ public class Main {
         }
 
         return string;
+    }
+
+    private static String addCommas(Number num) {
+        String numAsString = String.valueOf(num);
+
+        if (numAsString.length() < 4) {
+            return numAsString;
+        }
+
+        StringBuilder newString = new StringBuilder(numAsString);
+        for (int i = numAsString.length() - 4; i >= 0; i -= 3) {
+            newString.insert(i + 1, ',');
+        }
+        return newString.toString();
     }
 }
