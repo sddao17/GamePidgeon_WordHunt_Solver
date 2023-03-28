@@ -16,7 +16,7 @@ public class Main {
     private static final String ANSI_TOTAL_POINTS_COLOR = "\u001B[33m"; // Yellow
 
     public static final int DIMENSION = 5;
-    ;
+    
     public static final int[] GRID_DIMENSIONS = new int[]{DIMENSION, DIMENSION};
     public static final char[][] grid = new char[GRID_DIMENSIONS[0]][GRID_DIMENSIONS[1]];
     public static final int[] pointValues = new int[14];
@@ -104,11 +104,11 @@ public class Main {
         }
 
         System.out.println("Total of words found: " + ANSI_TOTAL_POINTS_COLOR + addCommas(totalNumWords) + ANSI_RESET +
-                "\n= " + Arrays.stream(numWordsFound)
+                " = " + Arrays.stream(numWordsFound)
                 .mapToObj(String::valueOf)
                 .collect(Collectors.joining(" + ")));
         System.out.println("Total points: " + ANSI_TOTAL_POINTS_COLOR + addCommas(totalPoints) + ANSI_RESET +
-                "\n= " + Arrays.stream(pointValues)
+                " = " + Arrays.stream(pointValues)
                 .mapToObj(String::valueOf)
                 .collect(Collectors.joining(" + ")));
     }
@@ -128,14 +128,14 @@ public class Main {
             input = in.nextLine().toUpperCase();
 
             if (input.length() != (GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1])) {
-                System.out.print("String length must be of length " +
+                System.out.print("Input must be of length " +
                         (GRID_DIMENSIONS[0] * GRID_DIMENSIONS[1]) + "; please try again.\n >> ");
             } else {
                 int inputLength = input.length();
 
                 for (int i = 0; i < inputLength; ++i) {
                     if (!Character.isLetter(input.charAt(i))) {
-                        System.out.print("String must consist of only alphabetic letters; please try again.\n >> ");
+                        System.out.print("Input must consist of only alphabetic letters; please try again.\n >> ");
                         break;
                     } else if (i == inputLength - 1) {
                         valid = true;

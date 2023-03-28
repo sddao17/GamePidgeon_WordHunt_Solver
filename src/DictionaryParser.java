@@ -23,16 +23,24 @@ public class DictionaryParser {
     private static void readAndWriteToFile(File fileToRead, File fileToWrite) throws IOException {
         StringBuilder retrievedData = new StringBuilder();
         String line;
+        boolean isFirstWord = true;
 
         try (BufferedReader bReader = new BufferedReader(new FileReader(fileToRead))) {
             while ((line = bReader.readLine()) != null) {
+
                 String[] splitWords = line.split(" ");
 
                 if (splitWords.length > 0) {
                     String firstWord = line.split(" ")[0].toUpperCase();
 
-                    if (firstWord.length() >= 3 && stringIsOnlyLetters(firstWord)) {
-                        retrievedData.append(firstWord).append("\n");
+                    if (stringIsOnlyLetters(firstWord) && firstWord.length() >= 3) {
+                        if (!isFirstWord) {
+                            retrievedData.append("\n");
+                        } else {
+                            isFirstWord = false;
+                        }
+
+                        retrievedData.append(firstWord);
                     }
                 }
             }
