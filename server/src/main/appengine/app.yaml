@@ -1,0 +1,15 @@
+runtime: java17
+instance_class: F2
+service: server
+
+handlers:
+  - url: /.*
+    script: this field is required, but ignored
+    secure: always  # Require HTTPS
+network:
+  session_affinity: true
+  forwarded_ports:
+    - 8080
+    - 8080:8080
+    - 8080/tcp
+    - 8080:8080/udp

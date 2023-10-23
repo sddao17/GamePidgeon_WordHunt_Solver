@@ -1,0 +1,13 @@
+runtime: nodejs18
+service: default
+
+handlers:
+  - url: /favicon.ico
+    static_files: build/favicon.ico
+    upload: build/favicon.ico
+  - url: /static
+    static_dir: build/static
+  - url: /.*
+    static_files: build/index.html
+    upload: build/index.html
+    secure: always
