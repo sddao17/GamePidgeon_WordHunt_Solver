@@ -16,7 +16,7 @@ import static server.com.portfolio.wordhunt.helper.StringHelper.justifiedLeftStr
 public class Board {
 
     // Creating files using designated paths
-    private final File DICTIONARY = new File("dictionary.txt");
+    private final File DICTIONARY = new File("dictionary_collins_2019.txt");
     private final File PARSED_DICTIONARY = new File("parsed_dictionary.txt");
     private final File SUBSTRING_SET = new File("substring_set.txt");
 
@@ -46,7 +46,8 @@ public class Board {
     protected char[][] grid;
     protected final int[] pointValues = new int[POINT_DISTRIBUTION.size()];
     protected final int[] numWordsFound = new int[POINT_DISTRIBUTION.size()];
-    protected final Map<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> foundWordsPaths = new TreeMap<>();
+    protected final Map<Integer, Set<String>> words = new TreeMap<>();
+    protected final Map<String, ArrayList<Pair<Integer, Integer>>> wordPaths = new TreeMap<>();
 
     public Board(String boardLetters) {
         long startTime;
@@ -116,13 +117,12 @@ public class Board {
     }
 
     public void solveBoard() {
-        Map<String, ArrayList<Pair<Integer, Integer>>> wordPaths = new TreeMap<>();
         Set<String> words = readFile(PARSED_DICTIONARY);
         Set<String> substrings = readFile(SUBSTRING_SET);
 
         for (int i = 0; i < grid.length; ++i) {
             for (int j = 0; j < grid.length; ++j) {
-                checkAdjacentTiles(new ArrayList<>(), wordPaths, foundWordsPaths, words, substrings,
+                checkAdjacentTiles(new ArrayList<>(), words, substrings,
                         new boolean[grid.length][grid.length],
                         new Pair<>(i, j), String.valueOf(grid[i][j]));
             }
@@ -130,9 +130,7 @@ public class Board {
     }
 
     private void checkAdjacentTiles(ArrayList<Pair<Integer, Integer>> currentPath,
-                                    Map<String, ArrayList<Pair<Integer, Integer>>> wordPaths,
-                                    Map<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> foundWordsPaths,
-                                    Set<String> words, Set<String> substrings,
+                                    Set<String> dictionaryWords, Set<String> substrings,
                                     boolean[][] visitedMemo, Pair<Integer, Integer> currentPositions,
                                     String currentString) {
         if (visitedMemo[currentPositions.first][currentPositions.second] || !substrings.contains(currentString)) {
@@ -144,13 +142,13 @@ public class Board {
         assert newVisitedMemo != null;
         newVisitedMemo[currentPositions.first][currentPositions.second] = true;
 
-        if (words.contains(currentString)) {
-            wordPaths.putIfAbsent(currentString, currentPath);
+        if (dictionaryWords.contains(currentString)) {
             int currentStringLength = currentString.length();
+            words.putIfAbsent(currentStringLength, new TreeSet<>());
 
-            if (foundWordsPaths.get(currentStringLength) == null || foundWordsPaths.get(currentStringLength).get(currentString) == null) {
-                foundWordsPaths.putIfAbsent(currentStringLength, new TreeMap<>());
-                foundWordsPaths.get(currentStringLength).put(currentString, currentPath);
+            if (!words.get(currentStringLength).contains(currentString)) {
+                words.get(currentStringLength).add(currentString);
+                wordPaths.put(currentString, currentPath);
 
                 pointValues[currentStringLength - 3] += POINT_DISTRIBUTION.get(currentStringLength);
                 ++numWordsFound[currentStringLength - 3];
@@ -159,71 +157,69 @@ public class Board {
 
         // Check northern tile
         if (currentPositions.first - 1 >= 0) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first - 1, currentPositions.second),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first - 1, currentPositions.second),
                     currentString + grid[currentPositions.first - 1][currentPositions.second]);
         }
 
         // Check north-eastern tile
         if (currentPositions.first - 1 >= 0 && currentPositions.second + 1 < grid.length) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first - 1, currentPositions.second + 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first - 1, currentPositions.second + 1),
                     currentString + grid[currentPositions.first - 1][currentPositions.second + 1]);
         }
 
         // Check eastern tile
         if (currentPositions.second + 1 < grid.length) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first, currentPositions.second + 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first, currentPositions.second + 1),
                     currentString + grid[currentPositions.first][currentPositions.second + 1]);
         }
 
         // Check south-eastern tile
         if (currentPositions.first + 1 < grid.length && currentPositions.second + 1 < grid.length) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first + 1, currentPositions.second + 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first + 1, currentPositions.second + 1),
                     currentString + grid[currentPositions.first + 1][currentPositions.second + 1]);
         }
 
         // Check southern tile
         if (currentPositions.first + 1 < grid.length) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first + 1, currentPositions.second),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first + 1, currentPositions.second),
                     currentString + grid[currentPositions.first + 1][currentPositions.second]);
         }
 
         // Check south-western tile
         if (currentPositions.first + 1 < grid.length && currentPositions.second - 1 >= 0) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first + 1, currentPositions.second - 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first + 1, currentPositions.second - 1),
                     currentString + grid[currentPositions.first + 1][currentPositions.second - 1]);
         }
 
         // Check western tile
         if (currentPositions.second - 1 >= 0) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first, currentPositions.second - 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first, currentPositions.second - 1),
                     currentString + grid[currentPositions.first][currentPositions.second - 1]);
         }
 
         // Check north-western tile
         if (currentPositions.first - 1 >= 0 && currentPositions.second - 1 >= 0) {
-            checkAdjacentTiles(new ArrayList<>(currentPath), wordPaths, foundWordsPaths, words, substrings,
-                    newVisitedMemo, new Pair<>(currentPositions.first - 1, currentPositions.second - 1),
+            checkAdjacentTiles(new ArrayList<>(currentPath), dictionaryWords, substrings, newVisitedMemo,
+                    new Pair<>(currentPositions.first - 1, currentPositions.second - 1),
                     currentString + grid[currentPositions.first - 1][currentPositions.second - 1]);
         }
     }
 
-    public String[] sortFoundWordsPaths() {
-        Map<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> sortedMap = new TreeMap<>(foundWordsPaths);
+    public String[] sortWordPaths() {
         int longestWordLength = 0;
         int largestListSize = 0;
+        Set<Map.Entry<Integer, Set<String>>> entrySet = words.entrySet();
 
-        Set<Map.Entry<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>>> entrySet = sortedMap.entrySet();
-
-        for (Map.Entry<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> entry : entrySet) {
+        for (Map.Entry<Integer, Set<String>> entry : entrySet) {
             int key = entry.getKey();
-            Set<String> value = entry.getValue().keySet();
+            Set<String> value = entry.getValue();
 
             if (key > longestWordLength) {
                 longestWordLength = key;
@@ -237,9 +233,9 @@ public class Board {
         String[] sortedLines = new String[largestListSize];
         Arrays.fill(sortedLines, "");
 
-        for (Map.Entry<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> entry : entrySet) {
+        for (Map.Entry<Integer, Set<String>> entry : entrySet) {
             int key = entry.getKey();
-            List<String> value = new ArrayList<>(entry.getValue().keySet());
+            List<String> value = new ArrayList<>(entry.getValue());
 
             for (int i = 0; i < largestListSize; ++i) {
                 int padLength = (i <= largestListSize - 1) ? 4 : 0;
@@ -279,8 +275,12 @@ public class Board {
         return numWordsFound;
     }
 
-    public Map<Integer, Map<String, ArrayList<Pair<Integer, Integer>>>> getFoundWordsPaths() {
-        return foundWordsPaths;
+    public Map<Integer, Set<String>> getWords() {
+        return words;
+    }
+
+    public Map<String, ArrayList<Pair<Integer, Integer>>> getWordPaths() {
+        return wordPaths;
     }
 
     @Override

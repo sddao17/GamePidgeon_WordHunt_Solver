@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import server.com.portfolio.wordhunt.model.Board;
 
 @RestController
-@RequestMapping(value = "/solveBoard", consumes = MediaType.ALL_VALUE)
+@RequestMapping(value = "/board", consumes = MediaType.ALL_VALUE)
 public class BoardController {
 
     public BoardController() {}
 
-    @GetMapping()
+    @GetMapping("/solve")
     public Board getSolvedBoard(@RequestParam("letters") String letters) {
         return new Board(letters);
     }

@@ -16,7 +16,8 @@ public class Main {
     private static final String ANSI_YELLOW = "\u001B[33m";
 
     public static void main(String[] args) {
-        //INSASEETITPRNEREASDHTITES got 1,167,000 points.
+        //INSASEETITPRNEREASDHTITES got 1,506,200 points.
+        //INSASEETITPRNEREASDHTITESASDERPREDASACKERSREDSASU got 1,754,500 points.
         long startTime;
         long endTime;
 
@@ -40,7 +41,7 @@ public class Main {
         System.out.print("Sorting words ... ");
 
         startTime = System.nanoTime();
-        String[] sortedLines = board.sortFoundWordsPaths();
+        String[] sortedLines = board.sortWordPaths();
         endTime = System.nanoTime();
 
         System.out.println("completed in " +
